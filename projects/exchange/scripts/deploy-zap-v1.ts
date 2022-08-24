@@ -1,48 +1,63 @@
 import { ethers, network, run } from "hardhat";
-import config from "../config";
+import deployConfig from "../deployConfig";
+import { NetworkName } from "../hardhat.config";
 
 const main = async () => {
   // Compile contracts
-  await run("compile");
-  console.log("Compiled contracts.");
+  await run(`compile`);
+  console.log(`Compiled contracts.`);
 
-  const networkName = network.name;
+  const networkName = network.name as NetworkName;
 
   // Sanity checks
-  if (networkName === "mainnet") {
+  if (networkName.endsWith(`Mainnet`)) {
     if (!process.env.KEY_MAINNET) {
-      throw new Error("Missing private key, refer to README 'Deployment' section");
+      throw new Error(
+        `Missing private key, refer to README 'Deployment' section`
+      );
     }
-  } else if (networkName === "testnet") {
+  } else if (networkName.endsWith(`Testnet`)) {
     if (!process.env.KEY_TESTNET) {
-      throw new Error("Missing private key, refer to README 'Deployment' section");
+      throw new Error(
+        `Missing private key, refer to README 'Deployment' section`
+      );
     }
   }
 
-  if (!config.AmpleRouter[networkName] || config.AmpleRouter[networkName] === ethers.constants.AddressZero) {
-    throw new Error("Missing router address, refer to README 'Deployment' section");
+  if (
+    !deployConfig.AmpleRouter[networkName] ||
+    deployConfig.AmpleRouter[networkName] === ethers.constants.AddressZero
+  ) {
+    throw new Error(
+      `Missing router address, refer to README 'Deployment' section`
+    );
   }
 
-  if (!config.WETH[networkName] || config.WETH[networkName] === ethers.constants.AddressZero) {
-    throw new Error("Missing WETH address, refer to README 'Deployment' section");
+  if (
+    !deployConfig.WETH[networkName] ||
+    deployConfig.WETH[networkName] === ethers.constants.AddressZero
+  ) {
+    throw new Error(
+      `Missing WETH address, refer to README 'Deployment' section`
+    );
   }
 
-  console.log("Deploying to network:", networkName);
+  console.log(`Deploying to network:`, networkName);
 
   // Deploy AmpleZapV1
-  console.log("Deploying AmpleZap V1..");
+  console.log(`Deploying AmpleZap V1..`);
 
-  const AmpleZapV1 = await ethers.getContractFactory("AmpleZapV1");
+  const AmpleZapV1 = await ethers.getContractFactory(`AmpleZapV1`);
 
   const ampleZap = await AmpleZapV1.deploy(
-    config.WETH[networkName],
-    config.AmpleRouter[networkName],
-    config.MaxZapReverseRatio[networkName]
+    deployConfig.WETH[networkName],
+    deployConfig.AmpleRouter[networkName],
+    deployConfig.MaxZapReverseRatio[networkName]
   );
 
   await ampleZap.deployed();
 
-  console.log("AmpleZap V1 deployed to:", ampleZap.address);
+  console.log(`AmpleZap V1 deployed to:`, ampleZap.address);
 };
 
 main()

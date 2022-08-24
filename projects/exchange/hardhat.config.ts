@@ -6,29 +6,31 @@ import "hardhat-contract-sizer";
 import "solidity-coverage";
 import "dotenv/config";
 
-const polygonTestnet: NetworkUserConfig = {
-  url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-  chainId: 97,
-  accounts: [process.env.KEY_TESTNET!],
-};
+export type NetworkName = "polygonTestnet" | "polygonMainnet";
 
-const polygonMainnet: NetworkUserConfig = {
-  url: "https://bsc-dataseed.binance.org/",
-  chainId: 56,
-  accounts: [process.env.KEY_MAINNET!],
+const networks: Record<NetworkName, NetworkUserConfig> = {
+  polygonTestnet: {
+    url: `https://rpc-mumbai.maticvigil.com/`,
+    chainId: 80001,
+    accounts: [process.env.KEY_TESTNET!],
+  },
+  polygonMainnet: {
+    url: `https://polygon-rpc.com/`,
+    chainId: 137,
+    accounts: [process.env.KEY_MAINNET!],
+  },
 };
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: `hardhat`,
   networks: {
     hardhat: {},
-    // testnet: bscTestnet,
-    // mainnet: bscMainnet,
+    ...networks,
   },
   solidity: {
     compilers: [
       {
-        version: "0.8.4",
+        version: `0.8.4`,
         settings: {
           optimizer: {
             enabled: true,
@@ -37,7 +39,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.6.6",
+        version: `0.6.6`,
         settings: {
           optimizer: {
             enabled: true,
@@ -46,7 +48,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.5.16",
+        version: `0.5.16`,
         settings: {
           optimizer: {
             enabled: true,
@@ -55,7 +57,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.4.18",
+        version: `0.4.18`,
         settings: {
           optimizer: {
             enabled: true,
@@ -66,10 +68,10 @@ const config: HardhatUserConfig = {
     ],
   },
   paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+    sources: `./contracts`,
+    tests: `./test`,
+    cache: `./cache`,
+    artifacts: `./artifacts`,
   },
 };
 
