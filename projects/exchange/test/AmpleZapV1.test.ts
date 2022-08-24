@@ -6,51 +6,51 @@ import { Contract } from "ethers";
 const { BN, constants, expectEvent, expectRevert, time } = require("@openzeppelin/test-helpers");
 
 const MockERC20 = artifacts.require("./utils/MockERC20.sol");
-const PancakeFactory = artifacts.require("./PancakeFactory.sol");
-const PancakePair = artifacts.require("./PancakePair.sol");
-const PancakeRouter = artifacts.require("./PancakeRouter.sol");
-const PancakeZapV1 = artifacts.require("./PancakeZapV1.sol");
-const WBNB = artifacts.require("./WBNB.sol");
+const AmpleFactory = artifacts.require("./AmpleFactory.sol");
+const AmplePair = artifacts.require("./AmplePair.sol");
+const AmpleRouter = artifacts.require("./AmpleRouter.sol");
+const AmpleZapV1 = artifacts.require("./AmpleZapV1.sol");
+const WETH = artifacts.require("./WETH.sol");
 
-contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
+contract("AmpleZapV1", ([alice, bob, carol, david, erin]) => {
   let maxZapReverseRatio;
   let pairAB: Contract;
   let pairBC: Contract;
   let pairAC: Contract;
-  let pancakeZap: Contract;
-  let pancakeRouter: Contract;
-  let pancakeFactory: Contract;
+  let ampleZap: Contract;
+  let ampleRouter: Contract;
+  let ampleFactory: Contract;
   let tokenA: Contract;
   let tokenC: Contract;
-  let wrappedBNB: Contract;
+  let wrappedETH: Contract;
 
   before(async () => {
     // Deploy Factory
-    pancakeFactory = await PancakeFactory.new(alice, { from: alice });
+    ampleFactory = await AmpleFactory.new(alice, { from: alice });
 
-    // Deploy Wrapped BNB
-    wrappedBNB = await WBNB.new({ from: alice });
+    // Deploy Wrapped ETH
+    wrappedETH = await WETH.new({ from: alice });
 
     // Deploy Router
-    pancakeRouter = await PancakeRouter.new(pancakeFactory.address, wrappedBNB.address, { from: alice });
+    ampleRouter = await AmpleRouter.new(ampleFactory.address, wrappedETH.address, { from: alice });
 
     // Deploy ZapV1
     maxZapReverseRatio = 100; // 1%
-    pancakeZap = await PancakeZapV1.new(wrappedBNB.address, pancakeRouter.address, maxZapReverseRatio, { from: alice });
+    ampleZap = await AmpleZapV1.new(wrappedETH.address, ampleRouter.address, maxZapReverseRatio, { from: alice });
 
     // Deploy ERC20s
     tokenA = await MockERC20.new("Token A", "TA", parseEther("10000000"), { from: alice });
     tokenC = await MockERC20.new("Token C", "TC", parseEther("10000000"), { from: alice });
 
     // Create 3 LP tokens
-    let result = await pancakeFactory.createPair(tokenA.address, wrappedBNB.address, { from: alice });
-    pairAB = await PancakePair.at(result.logs[0].args[2]);
+    let result = await ampleFactory.createPair(tokenA.address, wrappedETH.address, { from: alice });
+    pairAB = await AmplePair.at(result.logs[0].args[2]);
 
-    result = await pancakeFactory.createPair(wrappedBNB.address, tokenC.address, { from: alice });
-    pairBC = await PancakePair.at(result.logs[0].args[2]);
+    result = await ampleFactory.createPair(wrappedETH.address, tokenC.address, { from: alice });
+    pairBC = await AmplePair.at(result.logs[0].args[2]);
 
-    result = await pancakeFactory.createPair(tokenA.address, tokenC.address, { from: alice });
-    pairAC = await PancakePair.at(result.logs[0].args[2]);
+    result = await ampleFactory.createPair(tokenA.address, tokenC.address, { from: alice });
+    pairAC = await AmplePair.at(result.logs[0].args[2]);
 
     assert.equal(String(await pairAB.totalSupply()), parseEther("0").toString());
     assert.equal(String(await pairBC.totalSupply()), parseEther("0").toString());
@@ -61,39 +61,39 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       await tokenA.mintTokens(parseEther("2000000"), { from: thisUser });
       await tokenC.mintTokens(parseEther("2000000"), { from: thisUser });
 
-      await tokenA.approve(pancakeRouter.address, constants.MAX_UINT256, {
+      await tokenA.approve(ampleRouter.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await tokenA.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await tokenA.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await tokenC.approve(pancakeRouter.address, constants.MAX_UINT256, {
+      await tokenC.approve(ampleRouter.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await tokenC.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await tokenC.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await wrappedBNB.approve(pancakeRouter.address, constants.MAX_UINT256, {
+      await wrappedETH.approve(ampleRouter.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await wrappedBNB.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await wrappedETH.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await pairAB.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await pairAB.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await pairBC.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await pairBC.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
 
-      await pairAC.approve(pancakeZap.address, constants.MAX_UINT256, {
+      await pairAC.approve(ampleZap.address, constants.MAX_UINT256, {
         from: thisUser,
       });
     }
@@ -103,7 +103,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
     it("User adds liquidity to LP tokens", async function () {
       const deadline = new BN(await time.latest()).add(new BN("100"));
 
-      /* Add liquidity (Pancake Router)
+      /* Add liquidity (Ample Router)
        * address tokenB,
        * uint256 amountADesired,
        * uint256 amountBDesired,
@@ -114,7 +114,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
        */
 
       // 1 A = 1 C
-      let result = await pancakeRouter.addLiquidity(
+      let result = await ampleRouter.addLiquidity(
         tokenC.address,
         tokenA.address,
         parseEther("1000000"), // 1M token A
@@ -142,12 +142,12 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       assert.equal(String(await tokenA.balanceOf(pairAC.address)), parseEther("1000000").toString());
       assert.equal(String(await tokenC.balanceOf(pairAC.address)), parseEther("1000000").toString());
 
-      // 1 BNB = 100 A
-      result = await pancakeRouter.addLiquidityETH(
+      // 1 ETH = 100 A
+      result = await ampleRouter.addLiquidityETH(
         tokenA.address,
         parseEther("100000"), // 100k token A
         parseEther("100000"), // 100k token A
-        parseEther("1000"), // 1,000 BNB
+        parseEther("1000"), // 1,000 ETH
         bob,
         deadline,
         { from: bob, value: parseEther("1000").toString() }
@@ -160,15 +160,15 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       });
 
       assert.equal(String(await pairAB.totalSupply()), parseEther("10000").toString());
-      assert.equal(String(await wrappedBNB.balanceOf(pairAB.address)), parseEther("1000").toString());
+      assert.equal(String(await wrappedETH.balanceOf(pairAB.address)), parseEther("1000").toString());
       assert.equal(String(await tokenA.balanceOf(pairAB.address)), parseEther("100000").toString());
 
-      // 1 BNB = 100 C
-      result = await pancakeRouter.addLiquidityETH(
+      // 1 ETH = 100 C
+      result = await ampleRouter.addLiquidityETH(
         tokenC.address,
         parseEther("100000"), // 100k token C
         parseEther("100000"), // 100k token C
-        parseEther("1000"), // 1,000 BNB
+        parseEther("1000"), // 1,000 ETH
         bob,
         deadline,
         { from: bob, value: parseEther("1000").toString() }
@@ -181,7 +181,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       });
 
       assert.equal(String(await pairBC.totalSupply()), parseEther("10000").toString());
-      assert.equal(String(await wrappedBNB.balanceOf(pairBC.address)), parseEther("1000").toString());
+      assert.equal(String(await wrappedETH.balanceOf(pairBC.address)), parseEther("1000").toString());
       assert.equal(String(await tokenC.balanceOf(pairBC.address)), parseEther("100000").toString());
     });
 
@@ -190,13 +190,13 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       const tokenToZap = tokenA.address;
       const tokenAmountIn = parseEther("1");
 
-      const estimation = await pancakeZap.estimateZapInSwap(tokenToZap, parseEther("1"), lpToken);
+      const estimation = await ampleZap.estimateZapInSwap(tokenToZap, parseEther("1"), lpToken);
       assert.equal(estimation[2], tokenC.address);
 
       // Setting up slippage at 0.5%
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapInToken(tokenToZap, tokenAmountIn, lpToken, minTokenAmountOut, {
+      const result = await ampleZap.zapInToken(tokenToZap, tokenAmountIn, lpToken, minTokenAmountOut, {
         from: carol,
       });
 
@@ -215,22 +215,22 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       });
 
       assert.equal(String(await pairAC.balanceOf(carol)), parseEther("0.499373703104732887").toString());
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
-    it("User completes zapIn with BNB (pair BNB/tokenC)", async function () {
+    it("User completes zapIn with ETH (pair ETH/tokenC)", async function () {
       const lpToken = pairBC.address;
       const tokenAmountIn = parseEther("1");
 
-      const estimation = await pancakeZap.estimateZapInSwap(wrappedBNB.address, parseEther("1"), lpToken);
+      const estimation = await ampleZap.estimateZapInSwap(wrappedETH.address, parseEther("1"), lpToken);
       assert.equal(estimation[2], tokenC.address);
 
       // Setting up slippage at 0.5%
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapInBNB(lpToken, minTokenAmountOut, {
+      const result = await ampleZap.zapInETH(lpToken, minTokenAmountOut, {
         from: carol,
         value: tokenAmountIn.toString(),
       });
@@ -243,18 +243,18 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         user: carol,
       });
 
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
-    it("User completes zapInRebalancing with BNB (pair BNB/tokenC)", async function () {
+    it("User completes zapInRebalancing with ETH (pair ETH/tokenC)", async function () {
       const lpToken = pairBC.address;
-      const token0AmountIn = parseEther("1"); // 1 BNB
+      const token0AmountIn = parseEther("1"); // 1 ETH
       const token1AmountIn = parseEther("50"); // 50 token C
 
-      const estimation = await pancakeZap.estimateZapInRebalancingSwap(
-        wrappedBNB.address,
+      const estimation = await ampleZap.estimateZapInRebalancingSwap(
+        wrappedETH.address,
         tokenC.address,
         token0AmountIn,
         token1AmountIn,
@@ -267,7 +267,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
       const maxTokenAmountIn = new BN(estimation[0].toString()).mul(new BN("10005")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapInBNBRebalancing(
+      const result = await ampleZap.zapInETHRebalancing(
         tokenC.address,
         token1AmountIn,
         lpToken,
@@ -290,9 +290,9 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         user: carol,
       });
 
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
     it("User completes zapInRebalancing with tokens (tokenA/tokenC)", async function () {
@@ -300,7 +300,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       const token0AmountIn = parseEther("1000"); // 1000 token A
       const token1AmountIn = parseEther("5000"); // 5000 token C
 
-      const estimation = await pancakeZap.estimateZapInRebalancingSwap(
+      const estimation = await ampleZap.estimateZapInRebalancingSwap(
         tokenA.address,
         tokenC.address,
         token0AmountIn,
@@ -314,7 +314,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
       const maxTokenAmountIn = new BN(estimation[0].toString()).mul(new BN("10005")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapInTokenRebalancing(
+      const result = await ampleZap.zapInTokenRebalancing(
         tokenA.address,
         tokenC.address,
         token0AmountIn,
@@ -338,9 +338,9 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         user: carol,
       });
 
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
     it("User completes zapOut to token (tokenA/tokenC)", async function () {
@@ -348,12 +348,12 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       const lpTokenAmount = parseEther("1");
       const tokenToReceive = tokenA.address;
 
-      const estimation = await pancakeZap.estimateZapOutSwap(lpToken, lpTokenAmount, tokenToReceive);
+      const estimation = await ampleZap.estimateZapOutSwap(lpToken, lpTokenAmount, tokenToReceive);
       assert.equal(estimation[2], tokenC.address);
 
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapOutToken(lpToken, tokenToReceive, lpTokenAmount, minTokenAmountOut, {
+      const result = await ampleZap.zapOutToken(lpToken, tokenToReceive, lpTokenAmount, minTokenAmountOut, {
         from: carol,
       });
 
@@ -365,22 +365,22 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         user: carol,
       });
 
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
-    it("User completes zapOut to BNB (BNB/tokenC)", async function () {
+    it("User completes zapOut to ETH (ETH/tokenC)", async function () {
       const lpToken = pairBC.address;
       const lpTokenAmount = parseEther("1");
-      const tokenToReceive = wrappedBNB.address;
+      const tokenToReceive = wrappedETH.address;
 
-      const estimation = await pancakeZap.estimateZapOutSwap(lpToken, lpTokenAmount, tokenToReceive);
+      const estimation = await ampleZap.estimateZapOutSwap(lpToken, lpTokenAmount, tokenToReceive);
       assert.equal(estimation[2], tokenC.address);
 
       const minTokenAmountOut = new BN(estimation[1].toString()).mul(new BN("9995")).div(new BN("10000"));
 
-      const result = await pancakeZap.zapOutBNB(lpToken, lpTokenAmount, minTokenAmountOut, {
+      const result = await ampleZap.zapOutETH(lpToken, lpTokenAmount, minTokenAmountOut, {
         from: carol,
       });
 
@@ -392,20 +392,20 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         user: carol,
       });
 
-      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance WBNB: " + formatUnits(String(await wrappedBNB.balanceOf(pancakeZap.address)), 18));
-      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(pancakeZap.address)), 18));
+      console.info("Balance tokenA: " + formatUnits(String(await tokenA.balanceOf(ampleZap.address)), 18));
+      console.info("Balance WETH: " + formatUnits(String(await wrappedETH.balanceOf(ampleZap.address)), 18));
+      console.info("Balance tokenC: " + formatUnits(String(await tokenC.balanceOf(ampleZap.address)), 18));
     });
 
     it("Zap estimation fail if wrong tokens", async function () {
       await expectRevert(
-        pancakeZap.estimateZapInSwap(wrappedBNB.address, parseEther("1"), pairAC.address),
+        ampleZap.estimateZapInSwap(wrappedETH.address, parseEther("1"), pairAC.address),
         "Zap: Wrong tokens"
       );
       await expectRevert(
-        pancakeZap.estimateZapInRebalancingSwap(
+        ampleZap.estimateZapInRebalancingSwap(
           tokenA.address,
-          wrappedBNB.address,
+          wrappedETH.address,
           parseEther("1"),
           parseEther("1"),
           pairAC.address
@@ -414,8 +414,8 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       );
 
       await expectRevert(
-        pancakeZap.estimateZapInRebalancingSwap(
-          wrappedBNB.address,
+        ampleZap.estimateZapInRebalancingSwap(
+          wrappedETH.address,
           tokenA.address,
           parseEther("1"),
           parseEther("1"),
@@ -424,7 +424,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         "Zap: Wrong token0"
       );
       await expectRevert(
-        pancakeZap.estimateZapInRebalancingSwap(
+        ampleZap.estimateZapInRebalancingSwap(
           tokenA.address,
           tokenA.address,
           parseEther("1"),
@@ -435,21 +435,21 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       );
 
       await expectRevert(
-        pancakeZap.estimateZapOutSwap(pairAC.address, parseEther("1"), wrappedBNB.address),
+        ampleZap.estimateZapOutSwap(pairAC.address, parseEther("1"), wrappedETH.address),
         "Zap: Token not in LP"
       );
     });
 
     it("Zap estimations work as expected", async function () {
       // Verify estimations are the same regardless of the argument ordering
-      const estimation0 = await pancakeZap.estimateZapInRebalancingSwap(
+      const estimation0 = await ampleZap.estimateZapInRebalancingSwap(
         tokenA.address,
         tokenC.address,
         parseEther("0.5"),
         parseEther("1"),
         pairAC.address
       );
-      const estimation1 = await pancakeZap.estimateZapInRebalancingSwap(
+      const estimation1 = await ampleZap.estimateZapInRebalancingSwap(
         tokenC.address,
         tokenA.address,
         parseEther("1"),
@@ -462,8 +462,8 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       assert.equal(!estimation0[2], estimation1[2]);
 
       // Verify estimations are the same for zapIn and zapInRebalancing with 0 for one of the quantity
-      const estimation2 = await pancakeZap.estimateZapInSwap(tokenA.address, parseEther("5"), pairAC.address);
-      const estimation3 = await pancakeZap.estimateZapInRebalancingSwap(
+      const estimation2 = await ampleZap.estimateZapInSwap(tokenA.address, parseEther("5"), pairAC.address);
+      const estimation3 = await ampleZap.estimateZapInRebalancingSwap(
         tokenA.address,
         tokenC.address,
         parseEther("5"),
@@ -477,26 +477,26 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
 
     it("Cannot zap if wrong direction/tokens used", async function () {
       await expectRevert(
-        pancakeZap.zapInToken(tokenA.address, parseEther("1"), pairBC.address, parseEther("0.51"), { from: carol }),
+        ampleZap.zapInToken(tokenA.address, parseEther("1"), pairBC.address, parseEther("0.51"), { from: carol }),
         "Zap: Wrong tokens"
       );
       await expectRevert(
-        pancakeZap.zapInBNB(pairAC.address, parseEther("0.51"), { from: carol, value: parseEther("0.51").toString() }),
+        ampleZap.zapInETH(pairAC.address, parseEther("0.51"), { from: carol, value: parseEther("0.51").toString() }),
         "Zap: Wrong tokens"
       );
 
       await expectRevert(
-        pancakeZap.zapOutToken(pairBC.address, tokenA.address, parseEther("0.51"), parseEther("0.51"), { from: carol }),
+        ampleZap.zapOutToken(pairBC.address, tokenA.address, parseEther("0.51"), parseEther("0.51"), { from: carol }),
         "Zap: Token not in LP"
       );
 
       await expectRevert(
-        pancakeZap.zapOutBNB(pairAC.address, parseEther("0.51"), parseEther("0.51"), { from: carol }),
+        ampleZap.zapOutETH(pairAC.address, parseEther("0.51"), parseEther("0.51"), { from: carol }),
         "Zap: Token not in LP"
       );
 
       await expectRevert(
-        pancakeZap.zapInTokenRebalancing(
+        ampleZap.zapInTokenRebalancing(
           tokenA.address,
           tokenC.address,
           parseEther("1"),
@@ -511,7 +511,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       );
 
       await expectRevert(
-        pancakeZap.zapInTokenRebalancing(
+        ampleZap.zapInTokenRebalancing(
           tokenC.address,
           tokenA.address,
           parseEther("1"),
@@ -526,7 +526,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       );
 
       await expectRevert(
-        pancakeZap.zapInTokenRebalancing(
+        ampleZap.zapInTokenRebalancing(
           tokenC.address,
           tokenC.address,
           parseEther("1"),
@@ -541,7 +541,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
       );
 
       await expectRevert(
-        pancakeZap.zapInBNBRebalancing(
+        ampleZap.zapInETHRebalancing(
           tokenC.address,
           parseEther("1"),
           pairAB.address,
@@ -553,7 +553,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         "Zap: Wrong token1"
       );
       await expectRevert(
-        pancakeZap.zapInBNBRebalancing(
+        ampleZap.zapInETHRebalancing(
           tokenA.address,
           parseEther("1"),
           pairAC.address,
@@ -565,13 +565,13 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         "Zap: Wrong token0"
       );
 
-      // David gets WBNB
-      const result = await wrappedBNB.deposit({ from: david, value: parseEther("1").toString() });
+      // David gets WETH
+      const result = await wrappedETH.deposit({ from: david, value: parseEther("1").toString() });
       expectEvent(result, "Deposit", { dst: david, wad: parseEther("1").toString() });
 
       await expectRevert(
-        pancakeZap.zapInBNBRebalancing(
-          wrappedBNB.address,
+        ampleZap.zapInETHRebalancing(
+          wrappedETH.address,
           parseEther("1"),
           pairBC.address,
           parseEther("0.5"),
@@ -582,9 +582,9 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         "Zap: Same tokens"
       );
 
-      // TokenC (token0) > BNB (token1) --> sell token1 (should be false)
+      // TokenC (token0) > ETH (token1) --> sell token1 (should be false)
       await expectRevert(
-        pancakeZap.zapInBNBRebalancing(
+        ampleZap.zapInETHRebalancing(
           tokenC.address,
           parseEther("0.05"),
           pairBC.address,
@@ -596,9 +596,9 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
         "Zap: Wrong trade direction"
       );
 
-      // TokenC (token0) < BNB (token1) --> sell token0 (should be true)
+      // TokenC (token0) < ETH (token1) --> sell token0 (should be true)
       await expectRevert(
-        pancakeZap.zapInBNBRebalancing(
+        ampleZap.zapInETHRebalancing(
           tokenC.address,
           parseEther("0.0000000001"),
           pairBC.address,
@@ -612,7 +612,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
 
       // TokenA (token0) > tokenC (token1) --> sell token0 (should be true)
       await expectRevert(
-        pancakeZap.zapInTokenRebalancing(
+        ampleZap.zapInTokenRebalancing(
           tokenA.address,
           tokenC.address,
           parseEther("1"),
@@ -628,7 +628,7 @@ contract("PancakeZapV1", ([alice, bob, carol, david, erin]) => {
 
       // TokenA (token0) < tokenC (token1) --> sell token0 (should be true)
       await expectRevert(
-        pancakeZap.zapInTokenRebalancing(
+        ampleZap.zapInTokenRebalancing(
           tokenA.address,
           tokenC.address,
           parseEther("0"),
