@@ -1,6 +1,8 @@
 import { NetworkName } from "./hardhat.config";
 
-const deployConfig: { [key: string]: Record<NetworkName, string> } = {
+type DeployConfigKey = "AmpleRouter" | "MaxZapReverseRatio" | "WETH";
+
+const deployConfig: Record<DeployConfigKey, Record<NetworkName, string>> = {
   AmpleRouter: {
     polygonMainnet: ``,
     polygonTestnet: ``,
@@ -10,8 +12,8 @@ const deployConfig: { [key: string]: Record<NetworkName, string> } = {
     polygonTestnet: `50`, // 0.5%
   },
   WETH: {
-    polygonMainnet: ``,
-    polygonTestnet: ``,
+    polygonMainnet: `0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270`,
+    polygonTestnet: `0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889`,
   },
 };
 
