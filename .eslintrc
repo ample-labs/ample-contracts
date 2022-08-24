@@ -1,0 +1,6 @@
+{
+  "extends": "@ample-labs/eslint-config-ample",
+  "rules": {
+    "import/no-extraneous-dependencies": 0
+  }
+}
