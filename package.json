@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "repository": "https://github.com/ample-labs/ample-contracts.git",
   "author": "Chemist Darron <darron@ample.im>",
+  "private": true,
+  "workspaces": [
+    "projects/**"
+  ],
+  "scripts": {
+    "test": "lerna run test",
+    "test:coverage": "lerna run test:coverage",
+    "test:size-contracts": "lerna run test:size-contracts"
+  },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
@@ -19,7 +28,9 @@
     "chai": "^4.2.0",
     "ethers": "^5.4.7",
     "hardhat": "^2.10.1",
+    "hardhat-contract-sizer": "^2.6.1",
     "hardhat-gas-reporter": "^1.0.8",
+    "lerna": "^5.4.3",
     "solidity-coverage": "^0.7.21",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
