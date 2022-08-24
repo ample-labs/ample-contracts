@@ -29,7 +29,7 @@ library AmpleLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        hex"36a3b5c7a20269648e27e892e30e35c4a9c4c265597c14c9b5ae584749c289e4" // init code hash
+                        hex"9269b2988b88faff87018d505b684e4458a1ed7d8bfe7c5f724d3321afcd6140" // init code hash
                     )
                 )
             )

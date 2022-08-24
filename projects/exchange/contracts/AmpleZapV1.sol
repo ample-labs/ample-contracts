@@ -101,8 +101,8 @@ contract AmpleZapV1 is Ownable, ReentrancyGuard {
 
     /*
      * @notice Zap ETH in a WETH pool (e.g. WETH/token)
-     * @param _lpToken: LP token address (e.g. CAKE/ETH)
-     * @param _tokenAmountOutMin: minimum token amount (e.g. CAKE) to receive in the intermediary swap (e.g. ETH --> CAKE)
+     * @param _lpToken: LP token address (e.g. AMPLE/ETH)
+     * @param _tokenAmountOutMin: minimum token amount (e.g. AMPLE) to receive in the intermediary swap (e.g. ETH --> AMPLE)
      */
     function zapInETH(address _lpToken, uint256 _tokenAmountOutMin) external payable nonReentrant {
         WETH.deposit{value: msg.value}();
@@ -124,8 +124,8 @@ contract AmpleZapV1 is Ownable, ReentrancyGuard {
      * @notice Zap a token in (e.g. token/other token)
      * @param _tokenToZap: token to zap
      * @param _tokenAmountIn: amount of token to swap
-     * @param _lpToken: LP token address (e.g. CAKE/BUSD)
-     * @param _tokenAmountOutMin: minimum token to receive (e.g. CAKE) in the intermediary swap (e.g. BUSD --> CAKE)
+     * @param _lpToken: LP token address (e.g. AMPLE/USDT)
+     * @param _tokenAmountOutMin: minimum token to receive (e.g. AMPLE) in the intermediary swap (e.g. USDT --> AMPLE)
      */
     function zapInToken(
         address _tokenToZap,
@@ -239,9 +239,9 @@ contract AmpleZapV1 is Ownable, ReentrancyGuard {
 
     /*
      * @notice Zap a LP token out to receive ETH
-     * @param _lpToken: LP token address (e.g. CAKE/WETH)
+     * @param _lpToken: LP token address (e.g. AMPLE/WETH)
      * @param _lpTokenAmount: amount of LP tokens to zap out
-     * @param _tokenAmountOutMin: minimum amount to receive (in ETH/WETH) in the intermediary swap (e.g. CAKE --> ETH)
+     * @param _tokenAmountOutMin: minimum amount to receive (in ETH/WETH) in the intermediary swap (e.g. AMPLE --> ETH)
      */
     function zapOutETH(
         address _lpToken,
@@ -273,10 +273,10 @@ contract AmpleZapV1 is Ownable, ReentrancyGuard {
 
     /*
      * @notice Zap a LP token out (to receive a token)
-     * @param _lpToken: LP token address (e.g. CAKE/BUSD)
-     * @param _tokenToReceive: one of the 2 tokens from the LP (e.g. CAKE or BUSD)
+     * @param _lpToken: LP token address (e.g. AMPLE/USDT)
+     * @param _tokenToReceive: one of the 2 tokens from the LP (e.g. AMPLE or USDT)
      * @param _lpTokenAmount: amount of LP tokens to zap out
-     * @param _tokenAmountOutMin: minimum token to receive (e.g. CAKE) in the intermediary swap (e.g. BUSD --> CAKE)
+     * @param _tokenAmountOutMin: minimum token to receive (e.g. AMPLE) in the intermediary swap (e.g. USDT --> AMPLE)
      */
     function zapOutToken(
         address _lpToken,
