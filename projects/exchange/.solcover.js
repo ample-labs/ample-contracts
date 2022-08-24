@@ -10,7 +10,6 @@ module.exports = {
     "AmpleFactory.sol",
     "AmplePair.sol",
     "AmpleRouter.sol",
-    "AmpleRouter01.sol",
     "utils/MockERC20.sol",
   ],
 };
