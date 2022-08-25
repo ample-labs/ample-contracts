@@ -1,7 +1,7 @@
 {
   "name": "@ample-labs/exchange-contracts",
   "description": "Exchange contracts from Uniswap v2, and new features",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "GPL-3.0/MIT",
   "scripts": {
     "compile": "hardhat compile",
