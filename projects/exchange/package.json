@@ -3,7 +3,6 @@
   "description": "Exchange contracts from Uniswap v2, and new features",
   "version": "0.1.0",
   "license": "GPL-3.0/MIT",
-  "private": true,
   "scripts": {
     "compile": "hardhat compile",
     "deploy:testnet": "hardhat run --network polygonTestnet scripts/deploy.ts",
