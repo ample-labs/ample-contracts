@@ -26,5 +26,8 @@
     "artifacts/contracts/AmplePair.sol/AmplePair.json",
     "artifacts/contracts/interfaces/**/*.json",
     "!artifacts/contracts/interfaces/**/*.dbg.json"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
