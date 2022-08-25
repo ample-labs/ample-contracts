@@ -2,7 +2,7 @@
   "name": "@ample-labs/exchange-contracts",
   "description": "Exchange contracts from Uniswap v2, and new features",
   "version": "0.1.1",
-  "license": "GPL-3.0/MIT",
+  "license": "GPL-3.0",
   "scripts": {
     "compile": "hardhat compile",
     "deploy:testnet": "hardhat run --network polygonTestnet scripts/deploy.ts",
@@ -17,5 +17,14 @@
     "@openzeppelin/contracts": "^4.2.0",
     "@openzeppelin/test-helpers": "^0.5.15",
     "@uniswap/lib": "4.0.1-alpha"
-  }
+  },
+  "files": [
+    "contracts/interfaces",
+    "contracts/libraries",
+    "artifacts/contracts/AmpleFactory.sol/AmpleFactory.json",
+    "artifacts/contracts/AmpleRouter.sol/AmpleRouter.json",
+    "artifacts/contracts/AmplePair.sol/AmplePair.json",
+    "artifacts/contracts/interfaces/**/*.json",
+    "!artifacts/contracts/interfaces/**/*.dbg.json"
+  ]
 }
