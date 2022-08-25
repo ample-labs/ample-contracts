@@ -18,5 +18,12 @@
     "@openzeppelin/contracts": "^4.2.0",
     "@openzeppelin/test-helpers": "^0.5.15",
     "@uniswap/lib": "4.0.1-alpha"
+  },
+  "main": "typechain-types/index.ts",
+  "files": [
+    "typechain-types/"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
