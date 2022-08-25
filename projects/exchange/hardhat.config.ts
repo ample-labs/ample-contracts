@@ -1,5 +1,4 @@
 import type { HardhatUserConfig, NetworkUserConfig } from "hardhat/types";
-import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-truffle5";
