@@ -16,7 +16,9 @@
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^4.2.0",
     "@openzeppelin/test-helpers": "^0.5.15",
-    "@uniswap/lib": "4.0.1-alpha"
+    "@uniswap/lib": "4.0.1-alpha",
+    "ethereum-waffle": "^3.4.4",
+    "mocha-chai-jest-snapshot": "^1.1.4"
   },
   "files": [
     "contracts/interfaces",

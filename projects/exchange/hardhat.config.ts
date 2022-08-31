@@ -1,4 +1,5 @@
 import type { HardhatUserConfig, NetworkUserConfig } from "hardhat/types";
+import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-truffle5";
@@ -31,6 +32,15 @@ const config: HardhatUserConfig = {
     compilers: [
       {
         version: `0.8.4`,
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          },
+        },
+      },
+      {
+        version: `0.7.6`,
         settings: {
           optimizer: {
             enabled: true,
@@ -72,6 +82,9 @@ const config: HardhatUserConfig = {
     tests: `./test`,
     cache: `./cache`,
     artifacts: `./artifacts`,
+  },
+  typechain: {
+    outDir: `./typechain`,
   },
 };
 
