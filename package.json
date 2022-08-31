@@ -8,6 +8,7 @@
     "projects/**"
   ],
   "scripts": {
+    "compile": "lerna run compile",
     "test": "lerna run test",
     "test:coverage": "lerna run test:coverage",
     "test:size-contracts": "lerna run test:size-contracts",
