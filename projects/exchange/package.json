@@ -26,6 +26,7 @@
     "artifacts/contracts/AmpleFactory.sol/AmpleFactory.json",
     "artifacts/contracts/AmpleRouter.sol/AmpleRouter.json",
     "artifacts/contracts/AmplePair.sol/AmplePair.json",
+    "artifacts/contracts/base/Multicall.sol/Multicall.json",
     "artifacts/contracts/interfaces/**/*.json",
     "!artifacts/contracts/interfaces/**/*.dbg.json"
   ],
