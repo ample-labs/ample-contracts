@@ -13,12 +13,12 @@ const networks: Record<NetworkName, NetworkUserConfig> = {
   polygonTestnet: {
     url: `https://rpc-mumbai.maticvigil.com/`,
     chainId: 80001,
-    accounts: [process.env.KEY_TESTNET!],
+    accounts: process.env.KEY_TESTNET ? [process.env.KEY_TESTNET] : [],
   },
   polygonMainnet: {
     url: `https://polygon-rpc.com/`,
     chainId: 137,
-    accounts: [process.env.KEY_MAINNET!],
+    accounts: process.env.KEY_MAINNET ? [process.env.KEY_MAINNET] : [],
   },
 };
 
